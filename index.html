@@ -12,6 +12,7 @@
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
     <style>
         body { font-family: 'Pretendard', sans-serif; margin: 0; padding: 0; background-color: #F0F2F5; overflow: hidden; }
+        /* 70% 축소된 16:9 화면비 */
         .slide-aspect { aspect-ratio: 16 / 9; }
         .fade-in { animation: fadeIn 0.6s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
@@ -69,7 +70,7 @@
             }
         };
 
-        const Icon = ({ name, size = 24, className = "" }) => {
+        const Icon = ({ name, size = 18, className = "" }) => {
             const icons = {
                 left: <path d="m15 18-6-6 6-6"/>,
                 right: <path d="m9 18 6-6-6-6"/>,
@@ -202,7 +203,7 @@
                 return () => window.removeEventListener('keydown', handleKeyDown);
             }, []);
 
-            const SchoolLogo = ({ size = "w-10 h-10" }) => (
+            const SchoolLogo = ({ size = "w-7 h-7" }) => (
                 <div className={`${size} rounded-full bg-white flex items-center justify-center shadow-sm overflow-hidden border border-gray-100`}>
                     <img 
                         src="교포.png" 
@@ -214,13 +215,13 @@
             );
 
             const PhotoBox = ({ src, desc }) => (
-                <div className="bg-[#F2F2F2] rounded-[24px] border border-dashed border-gray-200 flex flex-col items-center justify-center h-full w-full relative overflow-hidden group photo-box">
+                <div className="bg-[#F2F2F2] rounded-[18px] border border-dashed border-gray-200 flex flex-col items-center justify-center h-full w-full relative overflow-hidden group photo-box">
                     {src ? (
                         <img src={src} alt={desc} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     ) : (
                         <div className="flex flex-col items-center text-gray-300">
-                            <Icon name="camera" size={32} className="mb-2" />
-                            <p className="font-bold px-4 text-center text-[10px] opacity-40 uppercase tracking-tighter">{desc || "PHOTO AREA"}</p>
+                            <Icon name="camera" size={24} className="mb-2" />
+                            <p className="font-bold px-4 text-center text-[8px] opacity-40 uppercase tracking-tighter">{desc || "PHOTO AREA"}</p>
                         </div>
                     )}
                 </div>
@@ -231,34 +232,34 @@
                 switch (slide.layout) {
                     case 'hero-image':
                         return (
-                            <div className="flex flex-col items-center justify-center h-full text-center p-4 fade-in">
-                                <div className="mb-2 scale-110">
-                                    <img src={slide.titleImage} className="max-h-[580px] w-auto object-contain drop-shadow-2xl rounded-xl" />
+                            <div className="flex flex-col items-center justify-center h-full text-center p-3 fade-in">
+                                <div className="mb-2 scale-105">
+                                    <img src={slide.titleImage} className="max-h-[400px] w-auto object-contain drop-shadow-2xl rounded-lg" />
                                 </div>
-                                <div className="bg-white/10 text-white px-4 py-1 rounded-full font-bold text-[10px] mb-2 tracking-widest uppercase">{slide.badge}</div>
-                                <p className="text-[20px] font-light leading-relaxed opacity-70 whitespace-pre-line cursor-pointer" onClick={handleAiRewrite}>
+                                <div className="bg-white/10 text-white px-3 py-1 rounded-full font-bold text-[7px] mb-2 tracking-widest uppercase">{slide.badge}</div>
+                                <p className="text-[14px] font-light leading-relaxed opacity-70 whitespace-pre-line cursor-pointer" onClick={handleAiRewrite}>
                                     {slide.subhead} ✨
                                 </p>
                             </div>
                         );
                     case 'hero':
                         return (
-                            <div className="flex flex-col items-center justify-center h-full text-center p-12 fade-in">
-                                <div className="mb-8 scale-110"><SchoolLogo size="w-16 h-16" /></div>
-                                <div className="bg-white/10 text-white px-4 py-1 rounded-full font-bold text-[10px] mb-6 tracking-widest uppercase">{slide.badge}</div>
-                                <h1 className="text-[64px] font-bold leading-[1.1] mb-6 whitespace-pre-line tracking-tighter">{slide.title}</h1>
-                                <p className="text-[24px] font-light leading-relaxed opacity-70 whitespace-pre-line cursor-pointer" onClick={handleAiRewrite}>
+                            <div className="flex flex-col items-center justify-center h-full text-center p-8 fade-in">
+                                <div className="mb-6 scale-110"><SchoolLogo size="w-12 h-12" /></div>
+                                <div className="bg-white/10 text-white px-3 py-1 rounded-full font-bold text-[7px] mb-4 tracking-widest uppercase">{slide.badge}</div>
+                                <h1 className="text-[45px] font-bold leading-[1.1] mb-4 whitespace-pre-line tracking-tighter">{slide.title}</h1>
+                                <p className="text-[17px] font-light leading-relaxed opacity-70 whitespace-pre-line cursor-pointer" onClick={handleAiRewrite}>
                                     {slide.subhead} ✨
                                 </p>
                             </div>
                         );
                     case 'grid-1':
                         return (
-                            <div className="flex flex-col h-full p-8 pt-16 fade-in">
-                                <div className="mb-4">
-                                    <div className="bg-[#0064E0] text-white px-3 py-0.5 rounded-full font-bold text-[9px] mb-2 w-fit tracking-wider uppercase">{slide.badge}</div>
-                                    <h2 className="text-[24px] font-bold mb-1 tracking-tight">{slide.title}</h2>
-                                    <p className="text-[14px] font-light text-gray-400 cursor-pointer" onClick={handleAiRewrite}>
+                            <div className="flex flex-col h-full p-6 pt-12 fade-in">
+                                <div className="mb-3">
+                                    <div className="bg-[#0064E0] text-white px-2 py-0.5 rounded-full font-bold text-[7px] mb-1.5 w-fit tracking-wider uppercase">{slide.badge}</div>
+                                    <h2 className="text-[17px] font-bold mb-0.5 tracking-tight">{slide.title}</h2>
+                                    <p className="text-[10px] font-light text-gray-400 cursor-pointer" onClick={handleAiRewrite}>
                                         {slide.subhead} ✨
                                     </p>
                                 </div>
@@ -267,15 +268,15 @@
                         );
                     case 'grid-2':
                         return (
-                            <div className="flex flex-col h-full p-8 pt-16 fade-in">
-                                <div className="mb-4">
-                                    <div className="bg-[#0064E0] text-white px-3 py-0.5 rounded-full font-bold text-[9px] mb-2 w-fit tracking-wider uppercase">{slide.badge}</div>
-                                    <h2 className="text-[24px] font-bold mb-1 tracking-tight">{slide.title}</h2>
-                                    <p className="text-[14px] font-light text-gray-400 cursor-pointer" onClick={handleAiRewrite}>
+                            <div className="flex flex-col h-full p-6 pt-12 fade-in">
+                                <div className="mb-3">
+                                    <div className="bg-[#0064E0] text-white px-2 py-0.5 rounded-full font-bold text-[7px] mb-1.5 w-fit tracking-wider uppercase">{slide.badge}</div>
+                                    <h2 className="text-[17px] font-bold mb-0.5 tracking-tight">{slide.title}</h2>
+                                    <p className="text-[10px] font-light text-gray-400 cursor-pointer" onClick={handleAiRewrite}>
                                         {slide.subhead} ✨
                                     </p>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
+                                <div className="grid grid-cols-2 gap-3 flex-1 min-h-0">
                                     <PhotoBox src={photos[0]} desc={slide.photoDescs?.[0]} />
                                     <PhotoBox src={photos[1]} desc={slide.photoDescs?.[1]} />
                                 </div>
@@ -283,15 +284,15 @@
                         );
                     case 'grid-4':
                         return (
-                            <div className="flex flex-col h-full p-8 pt-16 fade-in">
-                                <div className="mb-3">
-                                    <div className="bg-[#0064E0] text-white px-3 py-0.5 rounded-full font-bold text-[9px] mb-1 w-fit tracking-wider uppercase">{slide.badge}</div>
-                                    <h2 className="text-[20px] font-bold mb-0.5 tracking-tight">{slide.title}</h2>
-                                    <p className="text-[12px] font-light text-gray-400 cursor-pointer" onClick={handleAiRewrite}>
+                            <div className="flex flex-col h-full p-6 pt-12 fade-in">
+                                <div className="mb-2">
+                                    <div className="bg-[#0064E0] text-white px-2 py-0.5 rounded-full font-bold text-[7px] mb-1 w-fit tracking-wider uppercase">{slide.badge}</div>
+                                    <h2 className="text-[14px] font-bold mb-0.5 tracking-tight">{slide.title}</h2>
+                                    <p className="text-[9px] font-light text-gray-400 cursor-pointer" onClick={handleAiRewrite}>
                                         {slide.subhead} ✨
                                     </p>
                                 </div>
-                                <div className="grid grid-cols-2 grid-rows-2 gap-3 flex-1 min-h-0">
+                                <div className="grid grid-cols-2 grid-rows-2 gap-2 flex-1 min-h-0">
                                     {[0,1,2,3].map(i => <PhotoBox key={i} src={photos[i]} desc={slide.photoDescs?.[i]} />)}
                                 </div>
                             </div>
@@ -301,38 +302,39 @@
             };
 
             return (
-                <div className="flex flex-col items-center justify-center min-h-screen p-4">
+                <div className="flex flex-col items-center justify-center min-h-screen p-3">
                     <audio ref={audioRef} src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" loop />
                     
-                    <div className="relative shadow-2xl overflow-hidden bg-[#0A1317] rounded-[24px] w-full max-w-[1280px] slide-aspect">
-                        <div className="absolute top-5 left-6 z-50 flex items-center gap-3">
-                            <SchoolLogo size="w-8 h-8" />
+                    {/* 70% 축소된 슬라이드 캔버스 (896x504) */}
+                    <div className="relative shadow-2xl overflow-hidden bg-[#0A1317] rounded-[18px] w-full max-w-[896px] slide-aspect">
+                        <div className="absolute top-4 left-5 z-50 flex items-center gap-2">
+                            <SchoolLogo size="w-6 h-6" />
                             <div className={`flex flex-col ${slideData[currentSlide].bg === tokens.colors.deepInk ? 'text-white' : 'text-[#0A1317]'}`}>
-                                <span className="font-bold text-[12px] leading-tight tracking-tight">동일중앙초등학교</span>
-                                <span className="text-[8px] tracking-widest uppercase opacity-40 font-bold tracking-tighter">Seum School Festival</span>
+                                <span className="font-bold text-[9px] leading-tight tracking-tight">동일중앙초등학교</span>
+                                <span className="text-[6px] tracking-widest uppercase opacity-40 font-bold tracking-tighter">Seum School Festival</span>
                             </div>
                         </div>
 
-                        {isAiLoading && <div className="absolute top-0 left-0 w-full h-1 ai-shimmer z-[60]" />}
+                        {isAiLoading && <div className="absolute top-0 left-0 w-full h-0.5 ai-shimmer z-[60]" />}
 
                         <div style={{ backgroundColor: slideData[currentSlide].bg, color: slideData[currentSlide].color }} className="h-full">
                             {renderSlide(slideData[currentSlide])}
                         </div>
                     </div>
 
-                    <div className="fixed bottom-10 flex items-center gap-4 bg-white/95 backdrop-blur-xl px-8 py-3 rounded-full shadow-2xl border border-white/20">
-                        <button onClick={prevSlide} className="p-2 hover:bg-gray-100 rounded-full transition-all active:scale-90"><Icon name="left" size={24} className="text-black"/></button>
-                        <div className="flex gap-2 px-2">
-                            {slideData.map((_, i) => <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i === currentSlide ? 'w-10 bg-[#0064E0]' : 'w-1.5 bg-gray-200'}`} />)}
+                    <div className="fixed bottom-8 flex items-center gap-3 bg-white/95 backdrop-blur-xl px-6 py-2.5 rounded-full shadow-2xl border border-white/20">
+                        <button onClick={prevSlide} className="p-1.5 hover:bg-gray-100 rounded-full transition-all active:scale-90"><Icon name="left" size={20} className="text-black"/></button>
+                        <div className="flex gap-1.5 px-1.5">
+                            {slideData.map((_, i) => <div key={i} className={`h-1 rounded-full transition-all duration-500 ${i === currentSlide ? 'w-7 bg-[#0064E0]' : 'w-1 bg-gray-200'}`} />)}
                         </div>
-                        <button onClick={nextSlide} className="p-2 hover:bg-gray-100 rounded-full transition-all active:scale-90"><Icon name="right" size={24} className="text-black"/></button>
-                        <div className="w-[1px] h-6 bg-gray-200 mx-1" />
-                        <button onClick={toggleMusic} className={`flex items-center gap-3 px-6 py-2 rounded-full font-bold text-sm transition-all ${isPlaying ? 'bg-[#0064E0] text-white' : 'bg-gray-100 text-black'}`}>
-                            <Icon name={isPlaying ? "volume2" : "volumeX"} size={18} />
+                        <button onClick={nextSlide} className="p-1.5 hover:bg-gray-100 rounded-full transition-all active:scale-90"><Icon name="right" size={20} className="text-black"/></button>
+                        <div className="w-[1px] h-4 bg-gray-200 mx-1" />
+                        <button onClick={toggleMusic} className={`flex items-center gap-2 px-4 py-1.5 rounded-full font-bold text-[11px] transition-all ${isPlaying ? 'bg-[#0064E0] text-white' : 'bg-gray-100 text-black'}`}>
+                            <Icon name={isPlaying ? "volume2" : "volumeX"} size={14} />
                             {isPlaying ? '음악 끄기' : '음악 켜기'}
                         </button>
-                        <button className="bg-[#0A1317] text-white px-8 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 active:scale-95" onClick={() => { if(!isPlaying) toggleMusic(); setCurrentSlide(0); }}>
-                            <Icon name="play" size={16} /> START
+                        <button className="bg-[#0A1317] text-white px-6 py-2 rounded-full font-bold text-[11px] flex items-center gap-1.5 active:scale-95" onClick={() => { if(!isPlaying) toggleMusic(); setCurrentSlide(0); }}>
+                            <Icon name="play" size={12} /> START
                         </button>
                     </div>
                 </div>
