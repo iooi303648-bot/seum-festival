@@ -1,271 +1,278 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>동일중앙초 세움학교 페스티벌 (무한 재생)</title>
-    <!-- 라이브러리 로드 -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
-    <style>
-        body { font-family: 'Pretendard', sans-serif; margin: 0; padding: 0; background-color: #000; overflow: hidden; }
-        .slide-aspect { aspect-ratio: 16 / 9; }
-        .fade-in { animation: fadeIn 1s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(1.05); } to { opacity: 1; transform: scale(1); } }
-        
-        .school-logo-img { mix-blend-mode: multiply; filter: contrast(1.1) brightness(1.05); }
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Play, 
+  Pause, 
+  EyeOff, 
+  AlertTriangle 
+} from 'lucide-react';
 
-        .ai-shimmer {
-            background: linear-gradient(90deg, #0064E0 0%, #4a90e2 50%, #0064E0 100%);
-            background-size: 200% 100%;
-            animation: ai-shimmer 1.5s infinite linear;
-        }
-        @keyframes ai-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+const App = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [hideUI, setHideUI] = useState(false);
+  const audioRef = useRef(null);
+  
+  const SLIDE_DURATION = 6000;
 
-        .photo-box {
-            transition: all 0.5s ease;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        
-        .progress-bar { animation: progress linear infinite; }
+  const githubConfig = {
+    username: "iooi303648-bot",
+    repo: "seum-festival",
+    branch: "main",
+    folderPath: ""
+  };
+
+  const getGithubUrl = (filename) => {
+    const encodedFilename = encodeURIComponent(filename);
+    const path = githubConfig.folderPath ? `${githubConfig.folderPath}${encodedFilename}` : encodedFilename;
+    return `https://raw.githubusercontent.com/${githubConfig.username}/${githubConfig.repo}/${githubConfig.branch}/${path}`;
+  };
+
+  const photoUrls = useMemo(() => {
+    return Array.from({ length: 93 }, (_, i) => getGithubUrl(`사진 (${i + 1}).jpg`));
+  }, []);
+
+  const schoolLogoUrl = useMemo(() => getGithubUrl('교표.png'), []);
+  const titleImageUrl = useMemo(() => getGithubUrl('KakaoTalk_20260504_111859834.png'), []);
+
+  const slideData = useMemo(() => {
+    const intro = [{ 
+      id: 'intro', layout: 'hero-image', bg: "#000000", color: "#FFFFFF", 
+      titleImage: titleImageUrl, 
+      subhead: '우리가 직접 만들고 배우는\n반짝반짝 즐거운 축제 이야기' 
+    }];
+
+    const outro = [{ 
+      id: 'outro', layout: 'hero', bg: "#000000", color: "#FFFFFF", 
+      title: '더 넓은 세상으로\n함께 나아가요!', 
+      subhead: '언제나 스스로 생각하고 실천하는\n멋진 세움학교 어린이가 될게요!' 
+    }];
+
+    const gallery = [];
+    for (let i = 0; i < photoUrls.length; i += 4) {
+      gallery.push({ 
+        id: `gallery-${i}`, layout: 'grid-4', bg: "#FFFFFF", color: "#000000", 
+        title: '🔔 세움학교 교육활동', 
+        subhead: '친구들과 함께한 즐거운 순간들', 
+        photos: photoUrls.slice(i, i + 4), 
+        photoDescs: ['즐거운 활동', '친구와 함께', '집중하는 시간', '멋진 결과물'] 
+      });
+    }
+    return [...intro, ...gallery, ...outro];
+  }, [photoUrls, titleImageUrl]);
+
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slideData.length);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slideData.length) % slideData.length);
+
+  useEffect(() => {
+    let intervalId;
+    if (isAutoPlaying) intervalId = setInterval(nextSlide, SLIDE_DURATION);
+    return () => clearInterval(intervalId);
+  }, [isAutoPlaying, slideData.length]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'Escape') setHideUI(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const toggleAutoPlay = () => {
+    if (isAutoPlaying) {
+      audioRef.current?.pause();
+    } else {
+      audioRef.current?.play().catch(() => {});
+    }
+    setIsAutoPlaying(!isAutoPlaying);
+  };
+
+  const PhotoBox = ({ src, desc }) => {
+    const [status, setStatus] = useState('loading');
+    return (
+      <div className="bg-[#F8F8F8] rounded-[24px] border border-gray-100 flex flex-col items-center justify-center h-full w-full relative overflow-hidden shadow-sm">
+        {status !== 'error' ? (
+          <img 
+            src={src} 
+            alt={desc} 
+            className={`w-full h-full object-cover transition-opacity duration-1000 ${status === 'loading' ? 'opacity-0' : 'opacity-100'}`} 
+            onLoad={() => setStatus('success')}
+            onError={() => setStatus('error')}
+          />
+        ) : (
+          <div className="flex flex-col items-center text-gray-300 p-4 text-center">
+            <AlertTriangle size={24} className="mb-2 opacity-40" />
+            <p className="font-bold text-[10px] uppercase tracking-tighter">{desc}</p>
+          </div>
+        )}
+        {status === 'loading' && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-50/50">
+            <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderSlide = (slide) => {
+    const photos = slide.photos || [];
+    const isDark = slide.bg === "#000000";
+    
+    switch (slide.layout) {
+      case 'hero-image':
+        return (
+          <div key={slide.id} className="flex flex-col items-center justify-center h-full text-center px-12 pt-20 pb-20 animate-in fade-in zoom-in duration-1000">
+            <div className="flex-1 flex flex-col items-center justify-center min-h-0">
+              <img 
+                src={slide.titleImage} 
+                className="max-h-full w-auto object-contain drop-shadow-[0_0_40px_rgba(255,255,255,0.12)] rounded-3xl" 
+                onError={e => e.target.src="https://via.placeholder.com/600x400?text=Intro+Image"}
+              />
+            </div>
+            <p className={`mt-8 text-[22px] md:text-[30px] font-light opacity-90 whitespace-pre-line leading-relaxed ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              {slide.subhead} ✨
+            </p>
+          </div>
+        );
+      case 'hero':
+        return (
+          <div key={slide.id} className="flex flex-col items-center justify-center h-full text-center px-12 pt-20 pb-20 animate-in fade-in zoom-in duration-1000">
+            <div className="mb-8">
+              <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center border border-gray-100 shadow-xl mx-auto overflow-hidden">
+                <img src={schoolLogoUrl} className="w-4/5 h-4/5 object-contain" onError={e => e.target.src="https://via.placeholder.com/50?text=Logo"}/>
+              </div>
+            </div>
+            <h1 className="text-[52px] md:text-[70px] font-bold leading-[1.1] mb-8 whitespace-pre-line tracking-tight text-white text-shadow-lg">
+              {slide.title}
+            </h1>
+            <p className="text-[22px] md:text-[30px] font-light opacity-90 whitespace-pre-line leading-relaxed text-white">
+              {slide.subhead} ✨
+            </p>
+          </div>
+        );
+      case 'grid-4':
+        return (
+          <div key={slide.id} className="flex flex-col h-full px-10 pt-16 pb-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+            {/* 타이틀 영역: 중앙 정렬로 변경하여 로고와 겹침 방지 */}
+            <div className="mb-4 w-full flex flex-col items-center border-b border-gray-100 pb-2">
+              <h2 className="text-[22px] md:text-[28px] font-black tracking-tighter text-gray-900 uppercase">
+                {slide.title}
+              </h2>
+              <p className="text-[12px] font-bold text-gray-400 opacity-80 italic">
+                {slide.subhead} ✨
+              </p>
+            </div>
+            {/* 사진 그리드: 상하 공간을 최대로 사용 */}
+            <div className="grid grid-cols-2 grid-rows-2 gap-5 flex-1 min-h-0">
+              {photos.map((url, i) => (
+                <PhotoBox key={i} src={url} desc={slide.photoDescs[i]} />
+              ))}
+            </div>
+          </div>
+        );
+      default: return null;
+    }
+  };
+
+  return (
+    <div className={`flex flex-col items-center justify-center min-h-screen bg-black transition-all duration-700 ${hideUI ? 'cursor-none' : ''}`}>
+      <audio ref={audioRef} src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" loop />
+      
+      <div 
+        className="relative shadow-[0_40px_100px_rgba(0,0,0,0.9)] overflow-hidden rounded-[48px] transition-all duration-500 bg-white flex flex-col"
+        style={{
+          width: '97vw',
+          maxWidth: '1900px',
+          aspectRatio: '16 / 9',
+          maxHeight: '94vh'
+        }}
+      >
+        {/* 상단 프로그레스 바 */}
+        {isAutoPlaying && !hideUI && (
+          <div className="absolute top-0 left-0 w-full h-1 bg-black/5 z-[110]">
+            <div 
+              className="h-full bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.6)]" 
+              style={{ animation: `progress ${SLIDE_DURATION}ms linear infinite` }} 
+              key={currentSlide} 
+            />
+          </div>
+        )}
+
+        {/* 상단 고정 헤더: 좌측 상단 로고 유지 */}
+        {!hideUI && (
+          <header className="absolute top-6 left-12 right-12 z-[100] flex items-center justify-between pointer-events-none">
+            <div className="flex items-center gap-5">
+              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-gray-100 overflow-hidden shadow-lg">
+                <img src={schoolLogoUrl} alt="Logo" className="w-4/5 h-4/5 object-contain" onError={e => e.target.src="https://via.placeholder.com/50?text=S"}/>
+              </div>
+              <div className="flex flex-col">
+                <span className={`font-black text-[18px] md:text-[22px] tracking-tighter transition-colors duration-1000 ${slideData[currentSlide].bg === "#000000" ? 'text-white' : 'text-gray-900'}`}>
+                    동일중앙초등학교
+                </span>
+                <span className={`text-[10px] md:text-[11px] tracking-[0.3em] font-bold uppercase transition-colors duration-1000 ${slideData[currentSlide].bg === "#000000" ? 'text-white/40' : 'text-gray-400'}`}>
+                    Seum School Festival
+                </span>
+              </div>
+            </div>
+            <div className={`px-4 py-1.5 rounded-2xl border font-mono text-[14px] font-black transition-all duration-1000 ${slideData[currentSlide].bg === "#000000" ? 'text-white/30 border-white/10 bg-white/5' : 'text-gray-300 border-gray-100 bg-gray-50/50'}`}>
+                {String(currentSlide + 1).padStart(2, '0')} / {String(slideData.length).padStart(2, '0')}
+            </div>
+          </header>
+        )}
+
+        <main 
+          style={{ backgroundColor: slideData[currentSlide].bg }} 
+          className="h-full transition-colors duration-1000 relative overflow-hidden"
+        >
+          {renderSlide(slideData[currentSlide])}
+        </main>
+      </div>
+
+      {/* 하단 제어 바: 소형화 및 사진 침범 방지 */}
+      {!hideUI && (
+        <div className="fixed bottom-4 flex items-center gap-6 bg-white/85 backdrop-blur-xl px-7 py-2 rounded-full shadow-[0_20px_40px_rgba(0,0,0,0.2)] border border-white/40 z-[200] animate-in slide-in-from-bottom-6 duration-1000">
+          <div className="flex items-center gap-2">
+            <button onClick={prevSlide} className="p-1.5 hover:bg-black/5 rounded-full active:scale-75 transition-all text-gray-600">
+              <ChevronLeft size={20} strokeWidth={2.5} />
+            </button>
+            <button 
+              onClick={toggleAutoPlay} 
+              className={`w-8 h-8 flex items-center justify-center rounded-full transition-all active:scale-90 ${
+                isAutoPlaying ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-gray-900 text-white hover:bg-black'
+              }`}
+            >
+              {isAutoPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} className="ml-0.5" fill="currentColor" />}
+            </button>
+            <button onClick={nextSlide} className="p-1.5 hover:bg-black/5 rounded-full active:scale-75 transition-all text-gray-600">
+              <ChevronRight size={20} strokeWidth={2.5} />
+            </button>
+          </div>
+          
+          <div className="w-[1px] h-5 bg-gray-300/50" />
+          
+          <button 
+            className="bg-black/90 text-white px-5 py-2 rounded-full font-bold text-[10px] tracking-widest flex items-center gap-2 hover:bg-black active:scale-95 transition-all shadow-xl" 
+            onClick={() => { if(!isAutoPlaying) toggleAutoPlay(); setHideUI(true); }}
+          >
+            <EyeOff size={12} /> 녹화 최적화
+          </button>
+        </div>
+      )}
+
+      {hideUI && (
+        <div className="fixed bottom-6 text-white/20 text-[10px] font-black tracking-[0.4em] animate-pulse uppercase">
+          ESC TO MENU
+        </div>
+      )}
+
+      <style>{`
         @keyframes progress { from { width: 0%; } to { width: 100%; } }
+      `}</style>
+    </div>
+  );
+};
 
-        /* 영상 녹화 모드 시 마우스 커서 숨김 */
-        .hide-cursor { cursor: none; }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
-
-    <script type="text/babel">
-        const { useState, useEffect, useRef, useMemo } = React;
-
-        const apiKey = ""; 
-
-        const Icon = ({ name, size = 20, className = "" }) => {
-            const icons = {
-                left: <path d="m15 18-6-6 6-6"/>,
-                right: <path d="m9 18 6-6-6-6"/>,
-                play: <path d="m7 4 12 8-12 8V4z"/>,
-                pause: <path d="M6 4h4v16H6zm8 0h4v16h-4z"/>,
-                camera: <><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></>,
-                eyeOff: <><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></>,
-                alert: <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
-                link: <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></>
-            };
-            return (
-                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                    {icons[name]}
-                </svg>
-            );
-        };
-
-        const App = () => {
-            const [currentSlide, setCurrentSlide] = useState(0);
-            const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-            const [hideUI, setHideUI] = useState(false);
-            const audioRef = useRef(null);
-            
-            const SLIDE_DURATION = 6000;
-
-            const tokens = {
-                colors: { canvasWhite: "#FFFFFF", deepInk: "#0A1317", cobaltPrimary: "#0064E0", softCloud: "#F2F2F2" }
-            };
-
-            // 업데이트된 56개의 사진 ID 목록
-            const googleDriveImageIds = [
-                "1skfRsCsSCKPPKXtyyTrZ7MmLgpkKJpR-", "1h_9bxS6bqa9RC1qfm96KePd3UU3JLqiQ", "1sfqGXez460qTaQeJTnpVXRIl6D86Mjt0",
-                "1d-52RgjSqCcGJ0ExAVBDX57kFw_PhLHD", "14Jpn5CDAXmqvFI-aw3Da5g_TLzYNpK7y", "1aF4eqqucBK1xtPtv-6G7epUZ7O9kB5q7",
-                "1rEkfouCaBq5rJ-ufmO16-VaBG2cvkL5R", "1aPpjf4QIJKVaA1BnTdtZorBKZ0aRLFUj", "1gCggfPWM_9hA3fh-OeJTJBMEPLjwXoYQ",
-                "1vhiZb2nzMXn2P_vCx9VJiLs8Tbgain8O", "1gUruI-38-_cfhOR6zfhe4HZwXoAnV6o4", "1EDPnHdNsjlmGnbEvM1xWU7bMxYIbCsHu",
-                "1ct-jtaA0mlaXwfX1gnCt9oF4Oxe_fBXu", "1Y2_AgA0Z3JiSFEyykBvBz3dKLieeAvE_", "1cGxPb74AKFS2tHKIUZzZdp_GidWd6NE6",
-                "1T1YZPZlI6qtVXPojXZPFNsmKDA8ZoPZY", "1JG6hUWyGAl3aXoz1RrAXuQ5q0r-4jZVL", "1m4dHd_zNtUQSwaajNHnlAO2KBfm1MTpM",
-                "1LpjWQhnR_4oJ828D9rPLwcejBw1RSh_c", "1B_tjO0c8AFv3RXOL4vwT5actRhNI0Acp", "1SE5zkDymqJcwkGXxpIiNtzt8TYrW6i97",
-                "15S9Aflv37RLEOX0ZAxTLPr-3kQ83Q44K", "1-2_qrIWTi-4R-UEsEVw6uthNEXd1U1wy", "1PLhIAJWSEorcMYq4YlObgrozmZaeuJC2",
-                "1x6Glo5JWkdsJRumO75iIejlQjhmflMsK", "1LZaIsGgUFelh3nIfZ8anu4yGVZNW1wiC", "1XddvvApA68Rt3Fh63VTJTZIgT06tx7Z6",
-                "1Ji8-ijKlGKCIgXJjX6PCh1HOcIIXGgMP", "1wmEXf7fJmKj84iG7Och4rdz7jnN0pEvE", "13SzC4Yb_5GKY2dDJqGdZE2cNyqAKb61K",
-                "12CZJl1ZUTrnW8GPQHVpA08EWhZi6Yjk3", "176_xHANgsBzx7Lm3cLB7p5Ju-VlMDgOW", "1PlLeNW_CLhI1F1O4pkOV2gNYu6yKGI7S",
-                "1uUNGEeQfO6-toc61eikgMLZVv0bgVHoO", "1MEiM2Hq_1sxoKmphHmTefwN5ZjqYh7QK", "1JHZA-CCEceV9ZBFf3FTvCY17vR3SLYd0",
-                "1JXi62qZOdyY0vdNdKzmxiyXSGorGxmEB", "1k-vaunWt4Db4NZSAp7mCrZpA_Wzd5vYD", "17i9AjDyPu8EKzUeFNfaSdve9yfkiLq-I",
-                "1o_NekDx2h1so-1wZ4Ux6cOD0Xc1bFDdi", "12c3k7YWi3ZdYtXJTHF82XTbj5DiJHBsr", "1wwQ_nZeWGWbJHZVqAfvhKOWTlSXFGNbK",
-                "1S4dO_zHdTUM8Z6qEywAMPaInsUV2MKxU", "1heTjcRA3aacBhVoJTD3DhQU5554RlY7Q", "1hzpcT0CB-1huLsshAKmYfiX1xvGRtxGj",
-                "1zm1IncJ2xVlb8u2uAMEs9W7X5USI21-u", "1HUEkSypXMFS9cqIJ_EC6-BQeKT7xAAsR", "1BxGXAVROsSRgA_qmf7v2ttVg7GdCoFbi",
-                "1RlWD6fwOVf5_xKWTvERxRNveCn_byTh6", "1b50RnV1rGLt8cczUf0OXpQOCM8r_yNAi", "18ty4eTJmu6No1iD-BglJy22pUTB2ehtQ",
-                "11CyM1ZNqmdANCWLaQ27wjNO9BMTM451h", "1tvEiiUoZXSp6ZrIn6FR9qRdU31k77_Z3", "1yAB87iCMIbY3pl8KowrMR3IR96KVexq-",
-                "1bHkhUdpGLCf8v2cQLFEvJ4rxmZmpq8WV", "1E2a2cUhKxE4tTCMKBqXeicry-Fv_UsEv"
-            ];
-
-            // ⚠️ 가장 안정적인 구글 이미지 직접 주소로 변경
-            const getDriveImageUrl = (id) => `https://lh3.googleusercontent.com/d/${id}`;
-            const photoUrls = googleDriveImageIds.map(getDriveImageUrl);
-
-            const slideData = useMemo(() => {
-                const intro = [{ id: 'intro', layout: 'hero-image', bg: tokens.colors.deepInk, color: tokens.colors.canvasWhite, badge: '함께 만드는 우리 학교', titleImage: 'KakaoTalk_20260504_111859834.png', subhead: '우리가 직접 만들고 배우는\n반짝반짝 즐거운 축제 이야기' }];
-                const outro = [{ id: 'outro', layout: 'hero', bg: tokens.colors.deepInk, color: tokens.colors.canvasWhite, badge: '다음에 또 만나요', title: '더 넓은 세상으로\n함께 나아가요!', subhead: '언제나 스스로 생각하고 실천하는\n멋진 세움학교 어린이가 될게요!' }];
-                const gallery = [];
-                for (let i = 0; i < photoUrls.length; i += 4) {
-                    gallery.push({ id: `gallery-${i}`, layout: 'grid-4', bg: tokens.colors.canvasWhite, color: tokens.colors.deepInk, badge: `우리들의 추억 ${Math.floor(i/4) + 1}`, title: '페스티벌 하이라이트', subhead: '친구들과 함께한 즐거운 순간들', photos: photoUrls.slice(i, i + 4), photoDescs: ['즐거운 활동', '친구와 함께', '집중하는 시간', '멋진 결과물'] });
-                }
-                return [...intro, ...gallery, ...outro];
-            }, [photoUrls]);
-
-            const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slideData.length);
-            const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slideData.length) % slideData.length);
-
-            useEffect(() => {
-                let intervalId;
-                if (isAutoPlaying) intervalId = setInterval(nextSlide, SLIDE_DURATION);
-                return () => clearInterval(intervalId);
-            }, [isAutoPlaying, slideData.length]);
-
-            useEffect(() => {
-                const handleKeyDown = (e) => {
-                    if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
-                    if (e.key === 'ArrowLeft') prevSlide();
-                    if (e.key === 'Escape') setHideUI(false);
-                };
-                window.addEventListener('keydown', handleKeyDown);
-                return () => window.removeEventListener('keydown', handleKeyDown);
-            }, []);
-
-            const toggleAutoPlay = () => {
-                if (isAutoPlaying) audioRef.current.pause();
-                else audioRef.current.play().catch(() => {});
-                setIsAutoPlaying(!isAutoPlaying);
-            };
-
-            const SchoolLogo = ({ size = "w-10 h-10" }) => (
-                <div className={`${size} rounded-full bg-white flex items-center justify-center shadow-sm overflow-hidden border border-gray-100`}>
-                    <img src="교포.png" alt="logo" className="w-4/5 h-4/5 object-contain school-logo-img" onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=S'; }} />
-                </div>
-            );
-
-            const PhotoBox = ({ src, desc }) => {
-                const [error, setError] = useState(false);
-                const id = src.split('/').pop();
-                
-                return (
-                    <div className="bg-[#F2F2F2] rounded-[24px] border border-dashed border-gray-300 flex flex-col items-center justify-center h-full w-full relative overflow-hidden photo-box">
-                        {src && !error ? (
-                            <img 
-                                src={src} 
-                                alt={desc} 
-                                className="w-full h-full object-cover fade-in" 
-                                loading="lazy" 
-                                onError={() => setError(true)}
-                            />
-                        ) : (
-                            <div className="flex flex-col items-center text-gray-400 p-4 text-center">
-                                <Icon name={error ? "alert" : "camera"} size={32} className="mb-2 opacity-50" />
-                                <p className="font-bold text-[11px] mb-1">{desc}</p>
-                                {error && (
-                                    <div className="flex flex-col gap-1 items-center">
-                                        <p className="text-[9px] text-red-500 font-medium">이미지를 불러올 수 없습니다</p>
-                                        <a href={`https://drive.google.com/file/d/${id}/view`} target="_blank" className="bg-white px-2 py-1 rounded border text-[8px] flex items-center gap-1 hover:bg-gray-50 mt-1">
-                                            <Icon name="link" size={8} /> 권한 확인하기
-                                        </a>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                );
-            };
-
-            const renderSlide = (slide) => {
-                const photos = slide.photos || [];
-                const commonClass = "flex flex-col items-center justify-center h-full text-center fade-in";
-                switch (slide.layout) {
-                    case 'hero-image':
-                        return (
-                            <div key={slide.id} className={`${commonClass} p-8 pt-32`}>
-                                <div className="mb-6"><img src={slide.titleImage} className="max-h-[380px] w-auto object-contain drop-shadow-2xl rounded-xl" onError={(e) => e.target.src = "https://via.placeholder.com/800x450?text=MAIN+IMAGE"} /></div>
-                                <div className="bg-white/10 text-white px-4 py-1 rounded-full font-bold text-[11px] mb-3 tracking-widest">{slide.badge}</div>
-                                <p className="text-[26px] font-light opacity-70 whitespace-pre-line leading-relaxed">{slide.subhead} ✨</p>
-                            </div>
-                        );
-                    case 'hero':
-                        return (
-                            <div key={slide.id} className={`${commonClass} p-12 pt-32`}>
-                                <div className="mb-10 scale-125"><SchoolLogo size="w-16 h-16" /></div>
-                                <div className="bg-white/10 text-white px-4 py-1 rounded-full font-bold text-[11px] mb-8 tracking-widest">{slide.badge}</div>
-                                <h1 className="text-[64px] font-bold leading-[1.1] mb-6 whitespace-pre-line tracking-tight">{slide.title}</h1>
-                                <p className="text-[26px] font-light opacity-70 whitespace-pre-line leading-relaxed">{slide.subhead} ✨</p>
-                            </div>
-                        );
-                    case 'grid-4':
-                        return (
-                            <div key={slide.id} className="flex flex-col h-full p-10 pt-32 fade-in items-center">
-                                <div className="mb-6 w-full max-w-[85%] flex items-end justify-between">
-                                    <div className="text-left">
-                                        <div className="bg-[#0064E0] text-white px-3 py-0.5 rounded-full font-bold text-[10px] mb-2 w-fit">{slide.badge}</div>
-                                        <h2 className="text-[24px] font-bold mb-1 tracking-tight">{slide.title}</h2>
-                                    </div>
-                                    <p className="text-[14px] font-light text-gray-500 text-right max-w-md leading-snug">{slide.subhead} ✨</p>
-                                </div>
-                                <div className="grid grid-cols-2 grid-rows-2 gap-5 w-[85%] h-[70%] min-h-0">
-                                    {[0,1,2,3].map(i => <PhotoBox key={i} src={photos[i]} desc={slide.photoDescs?.[i]} />)}
-                                </div>
-                            </div>
-                        );
-                    default: return null;
-                }
-            };
-
-            return (
-                <div className={`flex flex-col items-center justify-center min-h-screen p-4 ${hideUI ? 'hide-cursor' : ''}`}>
-                    <audio ref={audioRef} src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" loop />
-                    
-                    <div className="relative shadow-2xl overflow-hidden bg-[#0A1317] rounded-[32px] w-full max-w-[1280px] slide-aspect">
-                        {!hideUI && (
-                            <div className="absolute top-8 left-10 z-50 flex items-center gap-4 transition-opacity duration-500">
-                                <SchoolLogo size="w-12 h-12" />
-                                <div className={`flex flex-col ${slideData[currentSlide].bg === tokens.colors.deepInk ? 'text-white' : 'text-[#0A1317]'}`}>
-                                    <span className="font-bold text-[15px] tracking-tight">동일중앙초등학교</span>
-                                    <span className="text-[10px] tracking-widest opacity-40 font-bold">Seum School Festival</span>
-                                </div>
-                            </div>
-                        )}
-
-                        {isAutoPlaying && !hideUI && (
-                            <div className="absolute top-0 left-0 w-full h-1 bg-white/10 z-[60]">
-                                <div className="h-full bg-[#0064E0] progress-bar" style={{ animationDuration: `${SLIDE_DURATION}ms` }} key={currentSlide} />
-                            </div>
-                        )}
-
-                        <div style={{ backgroundColor: slideData[currentSlide].bg, color: slideData[currentSlide].color }} className="h-full">
-                            {renderSlide(slideData[currentSlide])}
-                        </div>
-                    </div>
-
-                    {!hideUI && (
-                        <div className="fixed bottom-10 flex items-center gap-4 bg-white/95 backdrop-blur-xl px-8 py-4 rounded-full shadow-2xl border border-white/20 fade-in">
-                            <button onClick={prevSlide} className="p-3 hover:bg-gray-100 rounded-full active:scale-90 transition-colors"><Icon name="left" size={24} className="text-black"/></button>
-                            <button onClick={toggleAutoPlay} className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${isAutoPlaying ? 'bg-[#0064E0] text-white shadow-lg shadow-blue-500/30' : 'bg-gray-100 text-black hover:bg-gray-200'}`}>
-                                <Icon name={isAutoPlaying ? "pause" : "play"} size={22} />
-                            </button>
-                            <button onClick={nextSlide} className="p-3 hover:bg-gray-100 rounded-full active:scale-90 transition-colors"><Icon name="right" size={24} className="text-black"/></button>
-                            <div className="w-[1px] h-8 bg-gray-200 mx-2" />
-                            <button className="bg-gray-800 text-white px-6 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-black transition-colors" onClick={() => { if(!isAutoPlaying) toggleAutoPlay(); setHideUI(true); }}>
-                                <Icon name="eyeOff" size={16} /> 녹화 모드 시작
-                            </button>
-                        </div>
-                    )}
-
-                    {hideUI && (
-                        <div className="fixed bottom-4 text-white/30 text-xs font-light pointer-events-none">
-                            Esc를 누르면 다시 메뉴가 나타납니다.
-                        </div>
-                    )}
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+export default App;
